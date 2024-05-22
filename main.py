@@ -1,32 +1,25 @@
 import requests as req
-from base64 import b64decode
-import json
 from PIL import Image
 from os import listdir
+from mojang import API
 
 
 def download_skin(username):
     if username+'.png' in listdir():
         return 0
-    r = req.get(f'https://api.mojang.com/users/profiles/minecraft/{username}')
-
-    res = r.json()
-    try:
-        print(res['errorMessage'])
-    except:
-        ID = res['id']
-        r = req.get(f'https://sessionserver.mojang.com/session/minecraft/profile/{ID}')
-        
-        res = r.json()
-        try:
-            print(res['errorMessage'])
-        except:
-            texdat = json.loads(b64decode(res['properties'][0]['value']).decode('utf-8'))
-            skinurl = texdat['textures']['SKIN']['url']
-            
-            res = req.get(skinurl)
-            with open(f'skins/{username}.png', 'wb') as f:
-                f.write(res.content)
+    
+    api = API()
+    
+    uuid = api.get_uuid(username)
+    if not uuid:
+        print(f"{username} is not a taken username.")
+    else:
+        print(f'Found {username}\'s UUID and SKIN!')
+        profile = api.get_profile(uuid)
+    
+        res = req.get(profile.skin_url)
+        with open(f'skins/{username}.png', 'wb') as f:
+            f.write(res.content)
 
 def average_color(colors):
     colora = [0, 0, 0, 0]
