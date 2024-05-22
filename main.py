@@ -2,12 +2,12 @@ import requests as req
 from PIL import Image
 from os import listdir
 from mojang import API
+from time import sleep
 
 
 def download_skin(username):
-    if username+'.png' in listdir():
+    if username+'.png' in listdir('skins'):
         return 0
-    
     api = API()
     
     uuid = api.get_uuid(username)
@@ -53,8 +53,17 @@ with open('usernames.txt') as f:
 
 imgs = []
 for u in usernames:
-    download_skin(u)
-    imgs.append(Image.open(f'skins/{u}.png'))
+    while True:
+        print(f'Fetching {u}\'s skin.')
+        try:
+            download_skin(u)
+            im = Image.open(f'skins/{u}.png')
+            if im.size == (64, 64):
+                imgs.append(Image.open(f'skins/{u}.png'))
+            print('Success!')
+            break
+        except:
+            sleep(.5)
     
     
 im = average_img(imgs)
